@@ -1,0 +1,43 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace syntaxanalyzer
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void inputButton_Click(object sender, EventArgs e)
+        {
+            Analyzer analyzer = new Analyzer();
+            string input = inputBox.Text;
+
+            List<KeyValuePair<string, string>> symbolTable = analyzer.analyze(input);
+
+            table.Rows.Clear();
+
+            foreach(KeyValuePair<string, string> entry in symbolTable)
+            {
+                if (entry.Key.Equals("error"))
+                {
+                    table.Rows.Add("Error en línea " + entry.Value);
+                }
+                else
+                {
+                    table.Rows.Add(entry.Key, entry.Value);
+                }
+            }
+
+        }
+    }
+}
