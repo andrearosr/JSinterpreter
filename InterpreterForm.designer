@@ -35,10 +35,10 @@ namespace syntaxanalyzer
             this.label2 = new System.Windows.Forms.Label();
             this.inputBox = new System.Windows.Forms.RichTextBox();
             this.inputButton = new System.Windows.Forms.Button();
-            this.table = new System.Windows.Forms.DataGridView();
-            this.instruction = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Table = new System.Windows.Forms.DataGridView();
+            this.variable = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.value = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.table)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Table)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -57,9 +57,9 @@ namespace syntaxanalyzer
             this.label2.Font = new System.Drawing.Font("Century Gothic", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(579, 21);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(230, 30);
+            this.label2.Size = new System.Drawing.Size(234, 30);
             this.label2.TabIndex = 1;
-            this.label2.Text = "Tabla de Símbolos";
+            this.label2.Text = "Tabla de Variables";
             // 
             // inputBox
             // 
@@ -80,18 +80,18 @@ namespace syntaxanalyzer
             this.inputButton.TabIndex = 3;
             this.inputButton.Text = "Analizar";
             this.inputButton.UseVisualStyleBackColor = false;
-            this.inputButton.Click += new System.EventHandler(this.inputButton_Click);
+            this.inputButton.Click += new System.EventHandler(this.synAnalysis);
             // 
-            // table
+            // Table
             // 
-            this.table.AllowUserToAddRows = false;
-            this.table.AllowUserToDeleteRows = false;
-            this.table.AllowUserToResizeColumns = false;
-            this.table.AllowUserToResizeRows = false;
-            this.table.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.table.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.table.BackgroundColor = System.Drawing.Color.Honeydew;
-            this.table.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.Table.AllowUserToAddRows = false;
+            this.Table.AllowUserToDeleteRows = false;
+            this.Table.AllowUserToResizeColumns = false;
+            this.Table.AllowUserToResizeRows = false;
+            this.Table.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.Table.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.Table.BackgroundColor = System.Drawing.Color.Honeydew;
+            this.Table.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Century Gothic", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -99,10 +99,10 @@ namespace syntaxanalyzer
             dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.table.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.table.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.table.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.instruction,
+            this.Table.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.Table.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.Table.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.variable,
             this.value});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
@@ -111,21 +111,21 @@ namespace syntaxanalyzer
             dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.table.DefaultCellStyle = dataGridViewCellStyle2;
-            this.table.Location = new System.Drawing.Point(444, 71);
-            this.table.Name = "table";
-            this.table.ReadOnly = true;
-            this.table.RowHeadersVisible = false;
+            this.Table.DefaultCellStyle = dataGridViewCellStyle2;
+            this.Table.Location = new System.Drawing.Point(444, 71);
+            this.Table.Name = "Table";
+            this.Table.ReadOnly = true;
+            this.Table.RowHeadersVisible = false;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.table.RowsDefaultCellStyle = dataGridViewCellStyle3;
-            this.table.Size = new System.Drawing.Size(507, 348);
-            this.table.TabIndex = 4;
+            this.Table.RowsDefaultCellStyle = dataGridViewCellStyle3;
+            this.Table.Size = new System.Drawing.Size(507, 348);
+            this.Table.TabIndex = 4;
             // 
-            // instruction
+            // variable
             // 
-            this.instruction.HeaderText = "Instrucción";
-            this.instruction.Name = "instruction";
-            this.instruction.ReadOnly = true;
+            this.variable.HeaderText = "Variable";
+            this.variable.Name = "variable";
+            this.variable.ReadOnly = true;
             // 
             // value
             // 
@@ -139,14 +139,14 @@ namespace syntaxanalyzer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Honeydew;
             this.ClientSize = new System.Drawing.Size(987, 501);
-            this.Controls.Add(this.table);
+            this.Controls.Add(this.Table);
             this.Controls.Add(this.inputButton);
             this.Controls.Add(this.inputBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Analizador Sintáctico";
-            ((System.ComponentModel.ISupportInitialize)(this.table)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Table)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -158,8 +158,8 @@ namespace syntaxanalyzer
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.RichTextBox inputBox;
         private System.Windows.Forms.Button inputButton;
-        private System.Windows.Forms.DataGridView table;
-        private System.Windows.Forms.DataGridViewTextBoxColumn instruction;
+        private System.Windows.Forms.DataGridView Table;
+        private System.Windows.Forms.DataGridViewTextBoxColumn variable;
         private System.Windows.Forms.DataGridViewTextBoxColumn value;
     }
 }
