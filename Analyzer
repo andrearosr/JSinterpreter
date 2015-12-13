@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,8 +8,13 @@ using System.Threading.Tasks;
 
 namespace syntaxanalyzer
 {
+    /*
+        Analyzer se encarga de realizar el análisis sintáctico y semántico según las normas
+        especificadas en los proyectos parciales de la materia.
+    */
     class Analyzer
     {
+        //Estados del autómata finito determinista
         private enum Status
         {
             q0,
@@ -24,6 +30,7 @@ namespace syntaxanalyzer
             x
         };
 
+        //Descripción de cada posible código construido en la función Analyze
         private Dictionary<string, string> codes = new Dictionary<string, string>
         {
             {"A", "Declaración de variable"},
@@ -45,6 +52,7 @@ namespace syntaxanalyzer
             {@"^B([CD]H[CD])$", "Asignación de variable a división de valores"},
         };
 
+        //Patrones de lexemas y sus respectivos tokens asociados.
         private Dictionary<string, string> patterns = new Dictionary<string, string>
         {
             {"float",  @"^[0-9]*\.[0-9]+$"},
@@ -63,10 +71,12 @@ namespace syntaxanalyzer
             {"specialChar", @"^(\""|\{|\}|\.|\,)$"},
         };
 
+        //Constructor default de la clase
         public Analyzer()
         { }
 
-        private string compare(string lexeme)
+        //Determina el token asociado al lexema leído y devuelve dicho token
+        private string Compare(string lexeme)
         {
             Console.WriteLine("lex: " + lexeme);
             string match = "none";
@@ -79,23 +89,47 @@ namespace syntaxanalyzer
                     match = pattern.Key;
                 }
             }
+            Console.WriteLine("token: " + match);
 
             return match;
         }
 
-        private List<KeyValuePair<string, string>> tokenize(string input)
+        /*
+         * Genera una tabla de símbolos a partir del análisis léxico del código,
+         * donde se incluye cada lexema encontrado en el código y el token asociado al mismo.
+         * La identificación de los tokens se realiza mediante la división del código a partir de 
+         * una expresión regular que involucra operadores, whitespaces y terminadores de sentencia.
+         */
+        private List<KeyValuePair<string, object>> Tokenize(string input)
         {
-            List<KeyValuePair<string, string>> st = new List<KeyValuePair<string, string>> { };
+            List<KeyValuePair<string, object>> st = new List<KeyValuePair<string, object>> { };
             input = input.Trim();
 
             string[] words = Regex.Split(input, @"\s|(?=[;\=\+\-\*\/\,])(?<!\s)|(?<=[\=\+\-\*\/\,](?!\=))|(?<=;(?!$))");
 
             foreach (string lexeme in words)
             {
+                object val;
                 string token = "";
+                int intVal;
+                float floatVal;
 
-                token = compare(lexeme);
-                KeyValuePair<string, string> element = new KeyValuePair<string, string>(token, lexeme);
+                token = Compare(lexeme);
+                val = lexeme;
+
+                if (token.Equals("integer"))
+                {
+                    Int32.TryParse(lexeme, out intVal);
+                    val = intVal;
+                }
+                else if (token.Equals("float"))
+                {
+                    float.TryParse(lexeme, out floatVal);
+                    val = floatVal;
+                }
+
+
+                KeyValuePair<string, object> element = new KeyValuePair<string, object>(token, val);
 
                 st.Add(element);
 
@@ -104,31 +138,64 @@ namespace syntaxanalyzer
             return st;
         }
 
-        public List<KeyValuePair<string, string>> analyze(string input)
+        public Dictionary<string, object> Analyze(string input)
         {
-            List<KeyValuePair<string, string>> inst = new List<KeyValuePair<string, string>>();
+            Dictionary<string, object> varTable = new Dictionary<string, object>
+            {
+                {"Error", "None"}
+            };
+
+            List<KeyValuePair<string, object>> inst = new List<KeyValuePair<string, object>>();
             List<KeyValuePair<string, string>> symbolTable = new List<KeyValuePair<string, string>>();
 
-            string[] instructions = input.Trim().Split(new char[]{';'}, StringSplitOptions.RemoveEmptyEntries);
+            string[] instructions = input.Trim().Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             string insText = "";
             int line = 0;
             string valueCode = "";
-            string value = "";
+
+            /*
+             * targetVar = sourceValue ([+-/*] sourceValAd)*
+             * targetVar is stored to keep track of which variable is being modified
+             * sourceValue is stored in case there is an operation (sourceValue becomes the first operator, while
+             * the second operator is retrieved directly in the switch structure)
+             */
+            string targetVar = "";
+            object sourceValue = "";
+            string error = "";
             Console.WriteLine("length: " + instructions.Length);
 
             foreach (string instruction in instructions)
             {
                 Status status = Status.q0;
-                bool error = false;
                 line++;
-                inst = tokenize(instruction);
+                inst = Tokenize(instruction);
                 Console.WriteLine("instruction: " + inst.Count);
                 insText = instruction;
 
-                for (int i = 0; i < inst.Count; i++) {
+                for (int i = 0; i < inst.Count; i++)
+                {
+                    if (inst[i].Key.Equals("none"))
+                    {
+                        error = "Lexema " + inst[i].Value + " no reconocido";
+                        break;
+                    }
+
+                    /*
+                     * En esta estructura de switch el caso depende del estado actual.
+                     * En cada estado se comprueba el siguiente lexema en la tabla de símbolos y
+                     * se toman decisiones basándose en las transiciones aceptadas por el autómata.
+                     */
                     switch (status)
                     {
                         case Status.q0:
+
+                            /*
+                             * En esta estructura de switch el caso depende del token del siguiente 
+                             * lexema en la tabla de símbolos. 
+                             * Para cada token posible para el lexema, se toma una transición u otra
+                             * según el autómata. Los switches internos de los siguientes estados tienen
+                             * el mismo funcionamiento. 
+                             */
                             switch (inst[i].Key)
                             {
                                 case "declaration":
@@ -137,8 +204,14 @@ namespace syntaxanalyzer
                                 case "identifier":
                                     status = Status.q5;
                                     valueCode = "B";
+                                    targetVar = inst[i].Value.ToString();
+                                    if (!varTable.ContainsKey(targetVar))
+                                    {
+                                        error = "Variable " + inst[i].Value + " no declarada";
+                                    }
                                     break;
-                                default: status = Status.x;
+                                default:
+                                    status = Status.x;
                                     break;
                             }
                             break;
@@ -149,8 +222,11 @@ namespace syntaxanalyzer
                                 case "identifier":
                                     status = Status.q2;
                                     valueCode = "A";
+                                    varTable.Add(inst[i].Value.ToString(), "undefined");
+                                    targetVar = inst[i].Value.ToString();
                                     break;
-                                default: status = Status.x;
+                                default:
+                                    status = Status.x;
                                     break;
                             }
                             break;
@@ -174,12 +250,24 @@ namespace syntaxanalyzer
                                 case "identifier":
                                     status = Status.q4;
                                     valueCode += "C";
+                                    if (varTable.ContainsKey(inst[i].Value.ToString()))
+                                    {
+                                        sourceValue = varTable[inst[i].Value.ToString()];
+                                        varTable[targetVar] = sourceValue;
+                                    }
+                                    else
+                                    {
+                                        error = "Variable " + inst[i].Value + " no declarada";
+                                        varTable.Remove(targetVar);
+                                    }
                                     break;
                                 case "float":
                                 case "integer":
                                 case "string":
                                     status = Status.q4;
                                     valueCode += "D";
+                                    sourceValue = inst[i].Value;
+                                    varTable[targetVar] = sourceValue;
                                     break;
                                 default:
                                     status = Status.x;
@@ -232,12 +320,23 @@ namespace syntaxanalyzer
                                 case "identifier":
                                     status = Status.q7;
                                     valueCode += "C";
+                                    if (varTable.ContainsKey(inst[i].Value.ToString()))
+                                    {
+                                        sourceValue = varTable[inst[i].Value.ToString()];
+                                        varTable[targetVar] = sourceValue;
+                                    }
+                                    else
+                                    {
+                                        error = "Variable" + inst[i].Value + " no declarada";
+                                    }
                                     break;
                                 case "float":
                                 case "integer":
                                 case "string":
                                     status = Status.q7;
                                     valueCode += "D";
+                                    sourceValue = inst[i].Value;
+                                    varTable[targetVar] = sourceValue;
                                     break;
                                 default:
                                     status = Status.x;
@@ -274,11 +373,97 @@ namespace syntaxanalyzer
                             switch (inst[i].Key)
                             {
                                 case "identifier":
+                                    int op1, op2, newValue = 0;
                                     status = Status.q9;
                                     valueCode += "C";
+
+                                    op1 = Int32.Parse(sourceValue.ToString());
+
+                                    if (varTable.ContainsKey(inst[i].Value.ToString()))
+                                    {
+                                        op2 = Int32.Parse(varTable[inst[i].Value.ToString()].ToString());
+                                    
+                                        if (valueCode.Contains("E"))
+                                        {
+                                            newValue = op1 + op2;
+                                        }
+                                        else if(valueCode.Contains("F"))
+                                        {
+                                            newValue = op1 - op2;
+                                        }else if (valueCode.Contains("G"))
+                                        {
+                                            newValue = op1 * op2;
+                                        }else if (valueCode.Contains("H"))
+                                        {
+                                            newValue = op1 / op2;
+                                        }
+
+                                        varTable[targetVar] = newValue;
+                                    }
+                                    else
+                                    {
+                                        error = "Variable " + inst[i].Value + " no declarada";
+                                        varTable.Remove(targetVar);
+                                    }
                                     break;
                                 case "float":
+                                    status = Status.q9;
+                                    valueCode += "D";
+
+                                    float fop1, fop2, fnewValue = 0;
+
+                                    fop1 = float.Parse(sourceValue.ToString());
+                                    fop2 = float.Parse(inst[i].Value.ToString());
+
+                                    if (valueCode.Contains("E"))
+                                    {
+                                        fnewValue = fop1 + fop2;
+                                    }
+                                    else if (valueCode.Contains("F"))
+                                    {
+                                        fnewValue = fop1 - fop2;
+                                    }
+                                    else if (valueCode.Contains("G"))
+                                    {
+                                        fnewValue = fop1 * fop2;
+                                    }
+                                    else if (valueCode.Contains("H"))
+                                    {
+                                        fnewValue = fop1 / fop2;
+                                    }
+
+                                    varTable[targetVar] = fnewValue;
+                                    break;
+
                                 case "integer":
+                                    status = Status.q9;
+                                    valueCode += "D";
+
+                                    int iop1, iop2, inewValue = 0;
+
+                                    iop1 = Int32.Parse(sourceValue.ToString());
+                                    iop2 = Int32.Parse(inst[i].Value.ToString());
+
+                                    if (valueCode.Contains("E"))
+                                    {
+                                        inewValue = iop1 + iop2;
+                                    }
+                                    else if (valueCode.Contains("F"))
+                                    {
+                                        inewValue = iop1 - iop2;
+                                    }
+                                    else if (valueCode.Contains("G"))
+                                    {
+                                        inewValue = iop1 * iop2;
+                                    }
+                                    else if (valueCode.Contains("H"))
+                                    {
+                                        inewValue = iop1 / iop2;
+                                    }
+
+                                    varTable[targetVar] = inewValue;
+                                    break;
+
                                 case "string":
                                     status = Status.q9;
                                     valueCode += "D";
@@ -316,29 +501,42 @@ namespace syntaxanalyzer
 
                         case Status.x: break;
                     }
+
+                    /*
+                     * Se comprueba la existencia de un error semántico (variable no declarada)
+                     * o léxico (lexema inválido) para detener la ejecución del análisis de la instrucción
+                     */
+                    if (!error.Equals(""))
+                    {
+                        break;
+                    }
+
                 }
-                
-                if(status != Status.q2 && status != Status.q4 && status != Status.q7 && status != Status.q9)
+
+                /*
+                 * Se comprueba que el autómata haya terminado en uno de los 4 estados de aceptación
+                 * para determinar si existe error sintáctico (instrucción inválida). Se comprueba también
+                 * que el análisis no haya sido detenido por algún error léxico o semántico previamente.
+                 */
+                if (status != Status.q2 && status != Status.q4 && status != Status.q7 && status != Status.q9 &&
+                    error.Equals(""))
                 {
-                    insText = "error";
-                    valueCode = line.ToString();
-                    error = true;
+                    error = "Instrucción inválida";
                 }
 
-                value = getCodeDescription(valueCode);
-
-                KeyValuePair<string, string> entry = new KeyValuePair<string, string>(
-                    insText, value);
-                symbolTable.Add(entry);
-
-                if (error) break;
+                //Se verifica la existencia de un error para deterner el análisis del conjunto de instrucciones
+                if (!error.Equals(""))
+                {
+                    varTable["Error"] = "ERROR EN LÍNEA " + line.ToString() + "\n" + error;
+                    break;
+                }
 
             }
-
-            return symbolTable;
+            
+            return varTable;
         }
 
-        string getCodeDescription(string instCode)
+        string GetCodeDescription(string instCode)
         {
             string description = "";
 
@@ -353,5 +551,6 @@ namespace syntaxanalyzer
 
             return description;
         }
+        
     }
 }
